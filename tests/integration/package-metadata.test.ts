@@ -18,6 +18,7 @@ describe("package metadata", () => {
       "my-skills": "./bin/my-skills.js"
     });
     expect(packageJson.files).toEqual(["bin", "dist", "skills", "registry", "README.md"]);
+    expect(packageJson.scripts?.prepare).toBe("npm run build");
     expect(packageJson.scripts?.prepack).toBe("npm run build");
   });
 });

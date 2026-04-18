@@ -23,6 +23,7 @@
     "validate": "node --import tsx packages/cli/src/index.ts validate",
     "registry": "node --import tsx packages/cli/src/index.ts build-registry",
     "publish:skills": "node --import tsx packages/cli/src/index.ts publish",
+    "prepare": "npm run build",
     "prepack": "npm run build"
   },
   "devDependencies": {
