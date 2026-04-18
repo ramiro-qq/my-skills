@@ -1,0 +1,54 @@
+name: Publish Registry
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "skills/**"
+      - "packages/**"
+      - "registry/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "vitest.config.ts"
+      - ".github/workflows/publish-registry.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-registry:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Publish skill registry
+        run: npm run publish:skills
+
+      - name: Commit registry updates
+        run: |
+          if git diff --quiet -- registry/index.json; then
+            echo "No registry changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add registry/index.json
+          git commit -m "chore: update skill registry"
+          git push

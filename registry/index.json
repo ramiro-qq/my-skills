@@ -1,0 +1,28 @@
+{
+  "skills": [
+    {
+      "name": "example-skill",
+      "version": "0.1.0",
+      "description": "A minimal example skill used to validate repository conventions.",
+      "entry": "SKILL.md",
+      "files": [
+        "SKILL.md",
+        "README.md"
+      ],
+      "installPath": ".codex/skills/example-skill",
+      "path": "skills/example-skill"
+    },
+    {
+      "name": "review-notes",
+      "version": "0.1.0",
+      "description": "Generate concise review notes and follow-up actions from completed work.",
+      "entry": "SKILL.md",
+      "files": [
+        "SKILL.md",
+        "README.md"
+      ],
+      "installPath": ".codex/skills/review-notes",
+      "path": "skills/review-notes"
+    }
+  ]
+}

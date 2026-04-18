@@ -1,0 +1,35 @@
+{
+  "name": "my-skills",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "bin": {
+    "my-skills": "./bin/my-skills.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "skills",
+    "registry",
+    "README.md"
+  ],
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "clean": "node --eval \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "test": "vitest run",
+    "validate": "node --import tsx packages/cli/src/index.ts validate",
+    "registry": "node --import tsx packages/cli/src/index.ts build-registry",
+    "publish:skills": "node --import tsx packages/cli/src/index.ts publish",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4",
+    "zod": "^4.1.12"
+  }
+}
