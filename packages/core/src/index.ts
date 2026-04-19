@@ -1,14 +1,21 @@
+import { execFile } from "node:child_process";
 import {
   access,
   copyFile,
   mkdir,
+  mkdtemp,
   readFile,
   readdir,
+  rm,
   writeFile
 } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { promisify } from "node:util";
 
 import { parseSkillManifest, type SkillManifest } from "../../schema/src/index.js";
+
+const execFileAsync = promisify(execFile);
 
 export type LoadedSkillManifest = SkillManifest & {
   manifestPath: string;
@@ -189,12 +196,37 @@ async function fetchBytes(url: string): Promise<Uint8Array> {
   return new Uint8Array(await response.arrayBuffer());
 }
 
+function getGitHubRawBaseUrl(): string {
+  return (process.env.MY_SKILLS_GITHUB_RAW_BASE ?? "https://raw.githubusercontent.com").replace(
+    /\/$/,
+    ""
+  );
+}
+
+function getGitHubCloneBaseUrl(): string {
+  return (process.env.MY_SKILLS_GITHUB_GIT_BASE ?? "https://github.com").replace(/\/$/, "");
+}
+
+async function cloneGitHubRepository(repo: string, ref: string): Promise<string> {
+  const cloneDir = await mkdtemp(join(tmpdir(), "my-skills-github-clone-"));
+  const cloneUrl = `${getGitHubCloneBaseUrl()}/${repo}.git`;
+
+  try {
+    await execFileAsync("git", ["clone", "--depth", "1", "--branch", ref, cloneUrl, cloneDir]);
+  } catch (error) {
+    await rm(cloneDir, { recursive: true, force: true });
+    throw error;
+  }
+
+  return cloneDir;
+}
+
 async function loadRegistryIndexFromSource(source: RepositorySource): Promise<RegistryIndex> {
   if (source.type === "local") {
     return readRegistryIndexFromLocalRepo(source.rootDir);
   }
 
-  const baseUrl = `https://raw.githubusercontent.com/${source.repo}/${source.ref}`;
+  const baseUrl = `${getGitHubRawBaseUrl()}/${source.repo}/${source.ref}`;
   return fetchJson<RegistryIndex>(`${baseUrl}/registry/index.json`);
 }
 
@@ -229,7 +261,7 @@ async function installFromGitHubSource(
   installFiles: string[],
   destinationDir: string
 ): Promise<void> {
-  const baseUrl = `https://raw.githubusercontent.com/${repo}/${ref}/${skillPath}`;
+  const baseUrl = `${getGitHubRawBaseUrl()}/${repo}/${ref}/${skillPath}`;
 
   for (const file of installFiles) {
     const safeFile = validateRelativeInstallFile(file);
@@ -243,35 +275,77 @@ async function installFromGitHubSource(
 
 export async function installSkill(options: InstallSkillOptions): Promise<InstallSkillResult> {
   const source = parseRepositorySource(options.repository);
-  const registryIndex = await loadRegistryIndexFromSource(source);
-  const registryEntry = registryIndex.skills.find((skill) => skill.name === options.skillName);
+  let fallbackCloneDir: string | null = null;
 
-  if (!registryEntry) {
-    throw new Error(`Skill not found in registry: ${options.skillName}`);
-  }
+  try {
+    const registryIndex = await loadRegistryIndexFromSource(source);
+    const registryEntry = registryIndex.skills.find((skill) => skill.name === options.skillName);
 
-  const installedPath = join(options.targetDir, registryEntry.installPath);
-  const installFiles = Array.from(new Set(["skill.json", ...registryEntry.files]));
+    if (!registryEntry) {
+      throw new Error(`Skill not found in registry: ${options.skillName}`);
+    }
 
-  await mkdir(installedPath, { recursive: true });
+    const installedPath = join(options.targetDir, registryEntry.installPath);
+    const installFiles = Array.from(new Set(["skill.json", ...registryEntry.files]));
 
-  if (source.type === "local") {
-    await installFromLocalSource(source.rootDir, registryEntry.path, installFiles, installedPath);
-  } else {
-    await installFromGitHubSource(
-      source.repo,
-      source.ref,
-      registryEntry.path,
-      installFiles,
+    await mkdir(installedPath, { recursive: true });
+
+    if (source.type === "local") {
+      await installFromLocalSource(source.rootDir, registryEntry.path, installFiles, installedPath);
+    } else {
+      try {
+        await installFromGitHubSource(
+          source.repo,
+          source.ref,
+          registryEntry.path,
+          installFiles,
+          installedPath
+        );
+      } catch {
+        fallbackCloneDir = await cloneGitHubRepository(source.repo, source.ref);
+        await installFromLocalSource(
+          fallbackCloneDir,
+          registryEntry.path,
+          installFiles,
+          installedPath
+        );
+      }
+    }
+
+    return {
+      name: registryEntry.name,
+      version: registryEntry.version,
       installedPath
-    );
-  }
+    };
+  } catch (error) {
+    if (source.type !== "github") {
+      throw error;
+    }
 
-  return {
-    name: registryEntry.name,
-    version: registryEntry.version,
-    installedPath
-  };
+    fallbackCloneDir = await cloneGitHubRepository(source.repo, source.ref);
+    const registryIndex = await readRegistryIndexFromLocalRepo(fallbackCloneDir);
+    const registryEntry = registryIndex.skills.find((skill) => skill.name === options.skillName);
+
+    if (!registryEntry) {
+      throw new Error(`Skill not found in registry: ${options.skillName}`);
+    }
+
+    const installedPath = join(options.targetDir, registryEntry.installPath);
+    const installFiles = Array.from(new Set(["skill.json", ...registryEntry.files]));
+
+    await mkdir(installedPath, { recursive: true });
+    await installFromLocalSource(fallbackCloneDir, registryEntry.path, installFiles, installedPath);
+
+    return {
+      name: registryEntry.name,
+      version: registryEntry.version,
+      installedPath
+    };
+  } finally {
+    if (fallbackCloneDir) {
+      await rm(fallbackCloneDir, { recursive: true, force: true });
+    }
+  }
 }
 
 export async function publishRepository(

@@ -38,12 +38,6 @@ cd /path/to/your-project
 npm exec --yes --package=github:ramiro-qq/my-skills my-skills install ramiro-qq/my-skills example-skill .
 ```
 
-如果要安装指定分支或 tag 的 Skills：
-
-```bash
-npm exec --yes --package=github:ramiro-qq/my-skills my-skills install ramiro-qq/my-skills#main example-skill .
-```
-
 说明：
 
 - 前半段 `--package=github:ramiro-qq/my-skills` 表示 CLI 自身从这个仓库获取
@@ -56,12 +50,6 @@ npm exec --yes --package=github:ramiro-qq/my-skills my-skills install ramiro-qq/
 
 ```text
 .codex/skills/<skill-name>/
-```
-
-例如：
-
-```text
-.codex/skills/example-skill/
 ```
 
 ### 4. 在项目里使用 Skill
@@ -130,7 +118,6 @@ npm run publish:skills
 | Skill | 描述 | 使用场景 |
 | --- | --- | --- |
 | `example-skill` | 最小正式 Skill 示例，用于验证仓库规范和目录结构。 | 新建 Skill 时参考目录结构和元数据写法；验证仓库工具链。 |
-| `review-notes` | 生成简洁的评审备注和后续行动项。 | 开发完成后整理 review 结论、行动项和交付摘要。 |
 
 ## 未发布的 Skills 集合说明
 
