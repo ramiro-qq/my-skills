@@ -9,6 +9,7 @@ describe("package metadata", () => {
       version?: string;
       bin?: Record<string, string>;
       files?: string[];
+      dependencies?: Record<string, string>;
       scripts?: Record<string, string>;
     };
 
@@ -18,6 +19,7 @@ describe("package metadata", () => {
       "my-skills": "./bin/my-skills.js"
     });
     expect(packageJson.files).toEqual(["bin", "dist", "skills", "registry", "README.md"]);
+    expect(packageJson.dependencies?.zod).toBe("^4.1.12");
     expect(packageJson.scripts?.prepare).toBe("npm run build");
     expect(packageJson.scripts?.prepack).toBe("npm run build");
   });
