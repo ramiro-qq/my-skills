@@ -118,6 +118,7 @@ npm run publish:skills
 | Skill | 描述 | 使用场景 |
 | --- | --- | --- |
 | `example-skill` | 最小正式 Skill 示例，用于验证仓库规范和目录结构。 | 新建 Skill 时参考目录结构和元数据写法；验证仓库工具链。 |
+| `review-notes` | 生成简洁的评审备注和后续行动项。 | 开发完成后整理 review 结论、行动项和交付摘要。 |
 
 ## 未发布的 Skills 集合说明
 
