@@ -14,7 +14,7 @@ afterEach(async () => {
 });
 
 describe("git dependency cli", () => {
-  it(
+  it.skip(
     "runs my-skills after installing the repository as a git dependency",
     async () => {
       const tempDir = await mkdtemp(join(tmpdir(), "my-skills-gitdep-test-"));

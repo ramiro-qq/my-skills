@@ -35,18 +35,18 @@ cd /path/to/your-project
 直接从当前 GitHub 仓库执行 CLI，并安装 `example-skill`：
 
 ```bash
-npx github:ramiro-qq/my-skills install ramiro-qq/my-skills example-skill .
+npm exec --yes --package=github:ramiro-qq/my-skills my-skills install ramiro-qq/my-skills example-skill .
 ```
 
 如果要安装指定分支或 tag 的 Skills：
 
 ```bash
-npx github:ramiro-qq/my-skills install ramiro-qq/my-skills#main example-skill .
+npm exec --yes --package=github:ramiro-qq/my-skills my-skills install ramiro-qq/my-skills#main example-skill .
 ```
 
 说明：
 
-- 前半段 `github:ramiro-qq/my-skills` 表示 CLI 自身从这个仓库获取
+- 前半段 `--package=github:ramiro-qq/my-skills` 表示 CLI 自身从这个仓库获取
 - 后半段 `ramiro-qq/my-skills` 表示 Skill 来源仓库
 - 最后的 `.` 表示安装到当前项目目录
 
