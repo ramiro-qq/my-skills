@@ -12,7 +12,7 @@ describe("my-skills executable", () => {
     const result = await execFileAsync("node", ["bin/my-skills.js", "validate"]);
 
     expect(result.stdout).toContain("validated example-skill@0.1.0");
-    expect(result.stdout).toContain("validated review-notes@0.1.0");
+    expect(result.stdout).toContain("validated requirements-to-tech@0.1.0");
     expect(result.stdout).toContain("validated 2 skills");
   });
 });

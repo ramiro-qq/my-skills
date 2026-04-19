@@ -31,13 +31,14 @@ describe("build-registry command", () => {
         path: "skills/example-skill"
       },
       {
-        description: "Generate concise review notes and follow-up actions from completed work.",
+        description:
+          "Use when turning product requirements, feature briefs, or demand docs into a technical solution proposal that must compare options, align with existing architecture, inspect the current codebase, optionally analyze UI design inputs, and write a project-specific architecture document before any coding begins.",
         entry: "SKILL.md",
-        files: ["SKILL.md", "README.md"],
-        installPath: ".codex/skills/review-notes",
-        name: "review-notes",
+        files: ["SKILL.md", "references/tech-plan-template.md"],
+        installPath: ".codex/skills/requirements-to-tech",
+        name: "requirements-to-tech",
         version: "0.1.0",
-        path: "skills/review-notes"
+        path: "skills/requirements-to-tech"
       }
     ]);
   });

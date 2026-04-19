@@ -1,77 +1,76 @@
 # my-skills
 
-## 本项目信息与定位
+一个用于发布、安装和维护 Skills 的仓库。
 
-`my-skills` 是一个用于集中管理、发布、安装和维护 Skills 的仓库。
+- GitHub：`https://github.com/ramiro-qq/my-skills`
+- CLI：`my-skills`
+- 已发布 Skills 目录：`skills/`
+- 未发布想法目录：`docs/ideas/`
 
-- GitHub 仓库：`https://github.com/ramiro-qq/my-skills`
-- Skills 正式发布目录：`skills/`
-- Skills 草案目录：`docs/ideas/`
-- CLI 命令名：`my-skills`
-
-项目定位：
-
-- 对外提供一个可执行 CLI，用于安装已发布 Skills
-- 对内提供一套统一的 Skill 开发、校验、测试和发布流程
-- 使用 `registry/index.json` 维护已发布 Skills 索引
-
-## 使用 Skills 步骤说明
+## 使用已发布 Skills
 
 面向其他项目使用者。
 
 前提：
 
-- 当前仓库内容已经提交并推送到 GitHub
-- 你的环境里有 `Node.js` 和 `npx`
+- 你的环境里有 `Node.js`
+- 目标项目目录已经准备好
 
-### 1. 进入你的项目目录
+### 安装命令
 
-```bash
-cd /path/to/your-project
-```
-
-### 2. 使用 CLI 安装已发布 Skill
-
-直接从当前 GitHub 仓库执行 CLI，并安装 `example-skill`：
+在你的项目目录执行：
 
 ```bash
 npm exec --yes --package=github:ramiro-qq/my-skills my-skills install ramiro-qq/my-skills example-skill .
 ```
 
-说明：
+命令说明：
 
-- 前半段 `--package=github:ramiro-qq/my-skills` 表示 CLI 自身从这个仓库获取
-- 后半段 `ramiro-qq/my-skills` 表示 Skill 来源仓库
-- 最后的 `.` 表示安装到当前项目目录
+- `--package=github:ramiro-qq/my-skills`：从当前仓库拉起 CLI
+- `ramiro-qq/my-skills`：已发布 Skill 的来源仓库
+- `example-skill`：要安装的 Skill 名称
+- `.`：安装到当前项目目录
 
-### 3. 查看安装结果
+### 安装结果
 
-安装完成后，Skill 会落到你的项目目录：
+安装完成后，Skill 会出现在你的项目目录：
 
 ```text
 .codex/skills/<skill-name>/
 ```
 
-### 4. 在项目里使用 Skill
+例如：
 
-安装后的目录通常包含：
+```text
+.codex/skills/example-skill/
+```
+
+通常会包含：
 
 - `SKILL.md`
 - `skill.json`
-- `README.md`
-- `assets/`
-- `templates/`
-- `scripts/`
+- `README.md`（可选）
+- `references/`（可选）
+- `scripts/`（可选）
+- `templates/`（可选）
+- `assets/`（可选）
 
 后续就在你的项目环境中，按该 Skill 目录下的 `SKILL.md` 说明使用它。
 
-## 开发 Skill 步骤说明
+## 已发布 Skills 集合
+
+| Skill | 描述 | 使用场景 |
+| --- | --- | --- |
+| `example-skill` | 最小正式 Skill 示例，用于验证仓库规范和目录结构。 | 新建 Skill 时参考目录结构和元数据写法；验证安装和工具链。 |
+| `requirements-to-tech` | 将需求文档、PRD 或新功能说明转成项目可落地的技术方案。 | 需要技术选型、架构设计、增量改造分析、影响范围评估，并且必须先出文档再进入编码。 |
+
+## 开发与发布 Skill
 
 面向仓库维护者和 Skill 开发者。
 
 ### 1. 记录未发布想法
 
-如果一个 Skill 还在构思阶段，先在 `docs/ideas/` 下新增一个 Markdown 文件记录目标、场景和待完善点。
+如果一个 Skill 还在构思阶段，先在 `docs/ideas/` 下新增 Markdown 文件记录目标、场景和待完善点。
 
 ### 2. 创建正式 Skill
 
@@ -111,17 +110,12 @@ npm run publish:skills
 
 ### 5. 推送到 GitHub
 
-将变更推送到远程仓库后，由 GitHub Actions 继续执行自动校验、测试和 registry 更新。
+将变更推送到远程仓库后，由 GitHub Actions 执行自动校验、测试和 registry 更新。
 
-## 已发布 Skills 集合
+## 未发布 Skills 集合说明
 
-| Skill | 描述 | 使用场景 |
-| --- | --- | --- |
-| `example-skill` | 最小正式 Skill 示例，用于验证仓库规范和目录结构。 | 新建 Skill 时参考目录结构和元数据写法；验证仓库工具链。 |
-| `review-notes` | 生成简洁的评审备注和后续行动项。 | 开发完成后整理 review 结论、行动项和交付摘要。 |
+`docs/ideas/` 用于保留 Skill 草案、未发布想法，以及已经正式发布但仍需要保留的原始方案文档，便于后续迭代对照。
 
-## 未发布的 Skills 集合说明
+当前保留文档：
 
-未发布的 Skills 统一放在 `docs/ideas/`，用于记录暂未进入正式发布流程的 Skill 想法和待办项。
-
-当前暂无未发布 Skill。
+- `docs/ideas/技术方案.md`：`requirements-to-tech` 的原始草案，正式 Skill 发布后继续保留。

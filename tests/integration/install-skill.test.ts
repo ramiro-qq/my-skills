@@ -25,24 +25,32 @@ describe("installSkill", () => {
 
     const result = await installSkill({
       repository: ".",
-      skillName: "review-notes",
+      skillName: "requirements-to-tech",
       targetDir
     });
 
     const installedSkill = await readFile(
-      join(targetDir, ".codex/skills/review-notes/SKILL.md"),
+      join(targetDir, ".codex/skills/requirements-to-tech/SKILL.md"),
+      "utf8"
+    );
+    const installedReference = await readFile(
+      join(targetDir, ".codex/skills/requirements-to-tech/references/tech-plan-template.md"),
       "utf8"
     );
     const installedManifest = JSON.parse(
-      await readFile(join(targetDir, ".codex/skills/review-notes/skill.json"), "utf8")
+      await readFile(
+        join(targetDir, ".codex/skills/requirements-to-tech/skill.json"),
+        "utf8"
+      )
     ) as { name: string; version: string };
 
-    expect(result.name).toBe("review-notes");
+    expect(result.name).toBe("requirements-to-tech");
     expect(result.version).toBe("0.1.0");
-    expect(result.installedPath).toBe(join(targetDir, ".codex/skills/review-notes"));
-    expect(installedSkill).toContain("Review Notes");
+    expect(result.installedPath).toBe(join(targetDir, ".codex/skills/requirements-to-tech"));
+    expect(installedSkill).toContain("Requirements To Tech Plan");
+    expect(installedReference).toContain("技术方案模板");
     expect(installedManifest).toMatchObject({
-      name: "review-notes",
+      name: "requirements-to-tech",
       version: "0.1.0"
     });
   });

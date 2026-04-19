@@ -21,11 +21,12 @@ describe("publish command", () => {
       skills: Array<{ name: string }>;
     };
 
+    expect(result.stdout).toContain("published requirements-to-tech@0.1.0");
     expect(result.stdout).toContain("published 2 skills");
     expect(result.stdout).toContain("registry/index.json");
     expect(registryIndex.skills.map((skill) => skill.name)).toEqual([
       "example-skill",
-      "review-notes"
+      "requirements-to-tech"
     ]);
   });
 });

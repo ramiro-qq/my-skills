@@ -8,7 +8,7 @@ describe("loadAllSkillManifests", () => {
 
     expect(manifests.map((item) => item.name)).toEqual([
       "example-skill",
-      "review-notes"
+      "requirements-to-tech"
     ]);
   });
 });

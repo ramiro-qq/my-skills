@@ -24,16 +24,21 @@ describe("install command", () => {
       "packages/cli/src/index.ts",
       "install",
       ".",
-      "example-skill",
+      "requirements-to-tech",
       targetDir
     ]);
 
     const installedSkill = await readFile(
-      join(targetDir, ".codex/skills/example-skill/SKILL.md"),
+      join(targetDir, ".codex/skills/requirements-to-tech/SKILL.md"),
+      "utf8"
+    );
+    const installedReference = await readFile(
+      join(targetDir, ".codex/skills/requirements-to-tech/references/tech-plan-template.md"),
       "utf8"
     );
 
-    expect(result.stdout).toContain("installed example-skill@0.1.0");
-    expect(installedSkill).toContain("Example Skill");
+    expect(result.stdout).toContain("installed requirements-to-tech@0.1.0");
+    expect(installedSkill).toContain("Requirements To Tech Plan");
+    expect(installedReference).toContain("技术可行性分析");
   });
 });
