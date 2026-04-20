@@ -21,15 +21,21 @@
 在你的项目目录执行：
 
 ```bash
-npm exec --yes --package=github:ramiro-qq/my-skills my-skills install ramiro-qq/my-skills example-skill .
+curl -fsSL https://raw.githubusercontent.com/ramiro-qq/my-skills/main/scripts/install-skill.mjs -o /tmp/install-skill.mjs && node /tmp/install-skill.mjs ramiro-qq/my-skills example-skill .
 ```
 
 命令说明：
 
-- `--package=github:ramiro-qq/my-skills`：从当前仓库拉起 CLI
+- `curl ... install-skill.mjs`：直接下载仓库里的安装脚本，绕过 `npm exec github:...` 对 GitHub 包拉取的依赖
 - `ramiro-qq/my-skills`：已发布 Skill 的来源仓库
 - `example-skill`：要安装的 Skill 名称
 - `.`：安装到当前项目目录
+
+如果你本地访问 GitHub 包依赖很稳定，也可以继续使用 CLI 方式：
+
+```bash
+npm exec --yes --package=github:ramiro-qq/my-skills my-skills install ramiro-qq/my-skills example-skill .
+```
 
 ### 安装结果
 
