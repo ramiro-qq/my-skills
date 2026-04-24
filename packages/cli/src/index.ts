@@ -12,6 +12,7 @@ async function main() {
     }
 
     console.log("validated README install examples");
+    console.log("validated installation docs");
     console.log("validated compatibility notes");
 
     if (report.errors.length > 0) {

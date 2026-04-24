@@ -20,6 +20,16 @@ const requiredReadmeSnippets = [
   "npx skills add ramiro-qq/my-skills --agent codex --agent claude-code"
 ];
 
+const requiredInstallDocSnippets = [
+  "npx skills add ramiro-qq/my-skills",
+  "npx skills add https://github.com/ramiro-qq/my-skills",
+  "npx skills add . --list",
+  "--agent codex --copy -y",
+  "npx skills list -a codex",
+  "npx skills update -a codex -y",
+  "npx skills remove requirements-to-tech --agent codex -y"
+];
+
 const legacyReadmePatterns = [
   "my-skills install",
   "install-skill.mjs",
@@ -106,10 +116,17 @@ export async function validateRepository(rootDir: string): Promise<ValidationRep
   const skills = await loadPublishedSkills(skillsRoot);
   const errors: string[] = [];
   const readme = await readFile(join(rootDir, "README.md"), "utf8");
+  const installDoc = await readFile(join(rootDir, "docs", "install.md"), "utf8");
 
   for (const snippet of requiredReadmeSnippets) {
     if (!readme.includes(snippet)) {
       errors.push(`README is missing install example: ${snippet}`);
+    }
+  }
+
+  for (const snippet of requiredInstallDocSnippets) {
+    if (!installDoc.includes(snippet)) {
+      errors.push(`docs/install.md is missing install guidance: ${snippet}`);
     }
   }
 
@@ -121,6 +138,10 @@ export async function validateRepository(rootDir: string): Promise<ValidationRep
 
   if (!readme.includes("| Agent |") || !readme.includes("Codex") || !readme.includes("Claude Code")) {
     errors.push("README is missing the multi-agent compatibility matrix");
+  }
+
+  if (!installDoc.includes("## Troubleshooting") || !installDoc.includes("Clone timed out after 60s")) {
+    errors.push("docs/install.md is missing troubleshooting guidance for clone failures");
   }
 
   for (const skill of skills) {

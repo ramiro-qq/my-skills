@@ -36,6 +36,24 @@ npx skills add ramiro-qq/my-skills --agent codex --agent claude-code
 npx skills add . --list
 ```
 
+## Source Formats
+
+安装入口跟随 `skills.sh`，推荐支持下面三种 source 形态：
+
+```bash
+# GitHub shorthand
+npx skills add ramiro-qq/my-skills
+
+# Full GitHub URL
+npx skills add https://github.com/ramiro-qq/my-skills
+
+# Local path
+npx skills add .
+```
+
+如果你在排查仓库可发现性，优先用本地路径。  
+如果你在给外部用户写安装说明，优先用 GitHub shorthand。
+
 ## Verified Install Flows
 
 下面这些路径已经在本仓库本地通过真实 `skills` CLI 验证：
@@ -56,6 +74,30 @@ npx skills add /path/to/my-skills --skill requirements-to-tech --agent cursor --
 
 如果你只是想确认仓库结构是否被 `skills` CLI 正确识别，优先使用 `--list`。  
 如果你需要做安装回归，优先使用 `--skill <name> --agent <agent> --copy -y`，这样结果最稳定、最容易检查。
+
+## Codex Presets
+
+面向 Codex 的推荐安装和运维命令固定为下面几条：
+
+```bash
+# 安装一个 skill 到当前项目
+npx skills add ramiro-qq/my-skills --skill requirements-to-tech --agent codex --copy -y
+
+# 安装全部 skills 到当前项目
+npx skills add ramiro-qq/my-skills --skill '*' --agent codex --copy -y
+
+# 全局安装到当前用户
+npx skills add ramiro-qq/my-skills --skill requirements-to-tech --agent codex --copy -g -y
+
+# 查看 Codex 已安装 skills
+npx skills list -a codex
+
+# 更新 Codex 已安装 skills
+npx skills update -a codex -y
+
+# 移除 Codex 中的某个 skill
+npx skills remove requirements-to-tech --agent codex -y
+```
 
 ## 仓库结构
 
@@ -130,3 +172,11 @@ npm test
 npx skills add . --list
 npx skills add . --skill requirements-to-tech --agent codex --copy -y
 ```
+
+更多安装路径、Codex 预设和 clone 失败排查见 [docs/install.md](/Users/ramiroli/root/apps/github/my-skills/docs/install.md)。
+
+## Troubleshooting
+
+- 如果 `npx skills add ramiro-qq/my-skills ...` 在 clone 阶段超时，先用本地路径验证：`npx skills add . --list`
+- 如果本地路径可用而 GitHub shorthand 不可用，问题通常在网络、认证或远端可达性，而不是 skill 结构
+- 如果你只想给 Codex 装单个 skill，优先使用 `--skill requirements-to-tech --agent codex --copy -y`，不要先跑 `--all`
