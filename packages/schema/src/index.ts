@@ -3,12 +3,15 @@ import { z } from "zod";
 const skillFrontmatterSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
+  tags: z.array(z.string().min(1)).optional(),
+  license: z.string().min(1).optional(),
   metadata: z
     .object({
       internal: z.boolean().optional()
     })
+    .passthrough()
     .optional()
-});
+}).passthrough();
 
 export type SkillFrontmatter = z.infer<typeof skillFrontmatterSchema>;
 
@@ -47,6 +50,15 @@ function parseFrontmatterBlock(frontmatter: string): Record<string, unknown> {
     if (rawLine.startsWith("  ")) {
       if (!nestedKey) {
         throw new Error("Invalid frontmatter indentation");
+      }
+
+      const listMatch = rawLine.trim().match(/^-\s+(.*)$/);
+
+      if (listMatch) {
+        const items = Array.isArray(result[nestedKey]) ? [...(result[nestedKey] as unknown[])] : [];
+        items.push(coerceScalar(listMatch[1]));
+        result[nestedKey] = items;
+        continue;
       }
 
       const nestedMatch = rawLine.trim().match(/^([A-Za-z0-9_-]+):\s*(.*)$/);

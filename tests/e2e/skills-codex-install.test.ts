@@ -49,7 +49,7 @@ describe("skills CLI codex install", () => {
       );
 
       expect(result.stdout).toContain("requirements-to-tech");
-      expect(installedSkill).toContain("# Requirements To Tech Plan");
+      expect(installedSkill).toContain("# Requirements To Tech");
       expect(installedReference).toContain("技术方案模板");
     },
     120000

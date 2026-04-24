@@ -196,3 +196,9 @@ metadata:
 - 如果涉及新项目创建，是否读取了对应的 reference 文档？
 - 输出是否足以作为后续实现目标，而不是仅供参考的说明？
 - 如果输出了落盘文档：文件名是否严格符合 `.tmp/docs/architectures/YYYY-MM-DD-[需求简称].md`，且 `[需求简称]` 使用的是本次需求的中文简称而不是英文自拟标题？
+
+## Agent Notes
+
+- Generic behavior: 先读需求、再读项目上下文、最后输出技术方案，这个工作流对支持文件检索和 Markdown 输出的 Agent 都成立。
+- Codex-specific note: 如果运行环境提供更强的 workspace 搜索、计划或终端工具，可以用来加速上下文收集，但不要把这些工具写成技能的前置要求。
+- Fallback behavior: 如果目标 Agent 不支持同样的工具集，就退回到基础文件搜索、命令行检查和手工整理方案文档，保持“先方案、后编码”的约束不变。
