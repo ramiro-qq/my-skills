@@ -25,6 +25,7 @@ npx skills add ramiro-qq/my-skills --list
 
 ```bash
 npx skills add ramiro-qq/my-skills --skill requirements-to-tech
+npx skills add ramiro-qq/my-skills --skill integration-debug
 ```
 
 ### 为指定 Agent 安装技能
@@ -67,6 +68,14 @@ npx skills add . --skill requirements-to-tech --agent codex --copy -y
 如果你只想验证仓库结构是否能被 `skills` CLI 识别，优先使用 `--list`。  
 如果你只想给某个 Agent 安装一个技能，优先使用 `--skill <name> --agent <agent> --copy -y`。
 
+如果你要安装新发布的联调技能，推荐直接使用：
+
+```bash
+npx skills add ramiro-qq/my-skills --skill integration-debug --agent codex --copy -y
+```
+
+`integration-debug` 适合前后端联调、接口契约核对、异常数据兼容检查、整体流程回归和浏览器证据采集场景。
+
 更多安装路径和故障排查见 [docs/install.md](/Users/ramiroli/root/apps/github/my-skills/docs/install.md)。
 
 ## 已发布技能集合
@@ -74,4 +83,5 @@ npx skills add . --skill requirements-to-tech --agent codex --copy -y
 | Skill | Description | Use Case |
 | --- | --- | --- |
 | `example-skill` | 最小可发布 skill 模板。 | 参考标准 `SKILL.md` 结构与发布写法。 |
+| `integration-debug` | 将前端、后端和下游服务串起来做联调，并整理接口清单、核对请求响应、收敛阻塞项。 | 前后端联调、接口联调、验收前串联调试场景。 |
 | `requirements-to-tech` | 将需求文档或功能说明转成可审阅的技术方案。 | 先出方案、再编码的需求分析与技术设计场景。 |

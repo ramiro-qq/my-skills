@@ -15,10 +15,11 @@ describe("validate command", () => {
     ]);
 
     expect(result.stdout).toContain("validated example-skill@0.1.0");
+    expect(result.stdout).toContain("validated integration-debug@0.1.0");
     expect(result.stdout).toContain("validated requirements-to-tech@0.1.0");
     expect(result.stdout).toContain("validated README install examples");
     expect(result.stdout).toContain("validated installation docs");
     expect(result.stdout).toContain("validated compatibility notes");
-    expect(result.stdout).toContain("validated 2 skills");
+    expect(result.stdout).toContain("validated 3 skills");
   });
 });

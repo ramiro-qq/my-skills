@@ -32,6 +32,22 @@ describe("parseSkillFrontmatter", () => {
     });
   });
 
+  it("loads the integration-debug skill metadata", async () => {
+    const source = await readFile("skills/integration-debug/SKILL.md", "utf8");
+
+    const skill = parseSkillFrontmatter(source);
+
+    expect(skill).toMatchObject({
+      name: "integration-debug",
+      license: "MIT"
+    });
+    expect(skill.tags).toContain("integration");
+    expect(skill.metadata).toMatchObject({
+      author: "ramiro.li",
+      version: "0.0.3"
+    });
+  });
+
   it("rejects a skill file without frontmatter metadata", () => {
     expect(() => parseSkillFrontmatter("# Missing metadata\n")).toThrow(/frontmatter/i);
   });

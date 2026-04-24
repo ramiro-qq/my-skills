@@ -9,6 +9,7 @@ describe("validateRepository", () => {
     expect(report.errors).toEqual([]);
     expect(report.skills.map((skill) => skill.name)).toEqual([
       "example-skill",
+      "integration-debug",
       "requirements-to-tech"
     ]);
   });

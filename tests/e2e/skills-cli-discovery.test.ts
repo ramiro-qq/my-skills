@@ -18,6 +18,7 @@ describe("skills CLI discovery", () => {
       );
 
       expect(result.stdout).toContain("example-skill");
+      expect(result.stdout).toContain("integration-debug");
       expect(result.stdout).toContain("requirements-to-tech");
     },
     120000
