@@ -11,7 +11,7 @@ describe("install docs", () => {
     expect(doc).toContain("npx skills add . --list");
     expect(doc).toContain("--agent codex --copy -y");
     expect(doc).toContain("npx skills list -a codex");
-    expect(doc).toContain("npx skills update -a codex -y");
-    expect(doc).toContain("npx skills remove requirements-to-tech --agent codex -y");
+    expect(doc).toContain("remove --agent codex");
+    expect(doc).toContain("返回 success，但实际文件和 `skills-lock.json` 记录仍然保留");
   });
 });

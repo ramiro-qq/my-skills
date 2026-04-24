@@ -37,17 +37,11 @@ npx skills add ramiro-qq/my-skills --skill '*' --agent codex --copy -y
 npx skills add ramiro-qq/my-skills --skill requirements-to-tech --agent codex --copy -g -y
 ```
 
-## Codex Operations
+## Codex Verification
 
 ```bash
 # 查看 Codex 已安装 skills
 npx skills list -a codex
-
-# 更新 Codex 已安装 skills
-npx skills update -a codex -y
-
-# 从 Codex 中移除某个 skill
-npx skills remove requirements-to-tech --agent codex -y
 ```
 
 ## Validation Workflow
@@ -86,3 +80,15 @@ npx skills add ramiro-qq/my-skills --skill requirements-to-tech --agent codex --
 ```
 
 这样安装路径最确定，回归和排查也最直接。
+
+### Current CLI caveat
+
+我本地继续验证时，`skills remove requirements-to-tech --agent codex` 返回 success，但实际文件和 `skills-lock.json` 记录仍然保留。  
+也就是说，这条 remove 路径在当前 `skills` CLI 版本下对 Codex copy 安装并不稳定。
+
+因此本仓库当前只把下面这些当作“已验证”的 Codex 流程：
+
+- `npx skills add ... --agent codex --copy -y`
+- `npx skills list -a codex`
+
+而不是把 `remove --agent codex` 当成稳定运维命令。

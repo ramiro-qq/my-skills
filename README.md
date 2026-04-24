@@ -77,7 +77,7 @@ npx skills add /path/to/my-skills --skill requirements-to-tech --agent cursor --
 
 ## Codex Presets
 
-面向 Codex 的推荐安装和运维命令固定为下面几条：
+面向 Codex 的推荐安装和验证命令固定为下面几条：
 
 ```bash
 # 安装一个 skill 到当前项目
@@ -91,12 +91,6 @@ npx skills add ramiro-qq/my-skills --skill requirements-to-tech --agent codex --
 
 # 查看 Codex 已安装 skills
 npx skills list -a codex
-
-# 更新 Codex 已安装 skills
-npx skills update -a codex -y
-
-# 移除 Codex 中的某个 skill
-npx skills remove requirements-to-tech --agent codex -y
 ```
 
 ## 仓库结构
@@ -180,3 +174,5 @@ npx skills add . --skill requirements-to-tech --agent codex --copy -y
 - 如果 `npx skills add ramiro-qq/my-skills ...` 在 clone 阶段超时，先用本地路径验证：`npx skills add . --list`
 - 如果本地路径可用而 GitHub shorthand 不可用，问题通常在网络、认证或远端可达性，而不是 skill 结构
 - 如果你只想给 Codex 装单个 skill，优先使用 `--skill requirements-to-tech --agent codex --copy -y`，不要先跑 `--all`
+- `skills update` 当前更偏作用域更新，不适合写成 Codex 专属预设命令
+- 我本地继续验证时发现 `skills remove requirements-to-tech --agent codex` 返回成功但文件仍在，因此它暂时不作为本仓库推荐的 Codex 运维路径

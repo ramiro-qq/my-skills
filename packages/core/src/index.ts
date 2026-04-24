@@ -26,8 +26,8 @@ const requiredInstallDocSnippets = [
   "npx skills add . --list",
   "--agent codex --copy -y",
   "npx skills list -a codex",
-  "npx skills update -a codex -y",
-  "npx skills remove requirements-to-tech --agent codex -y"
+  "remove --agent codex",
+  "返回 success，但实际文件和 `skills-lock.json` 记录仍然保留"
 ];
 
 const legacyReadmePatterns = [
