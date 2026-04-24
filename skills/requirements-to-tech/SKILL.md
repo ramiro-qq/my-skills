@@ -1,100 +1,198 @@
 ---
 name: requirements-to-tech
-description: Use when converting 需求文档、PRD、feature brief、新功能说明 or an existing project context into a 技术方案/technical architecture proposal that must inspect current code and existing architecture docs, compare at least three solution options, optionally analyze UI design inputs, and produce a reviewable plan before any coding begins.
+description: 当需要把新增需求、PRD、功能简报或用户描述，结合项目当前代码、规则与约束，先沉淀为后续实现必须对齐的技术方案时使用。
+tags:
+  - requirements
+  - prd
+  - tech-plan
+  - architecture
+  - design
+  - planning
+  - implementation-alignment
+license: MIT
+metadata:
+  author: ramiro.li
+  version: "0.0.4"
 ---
 
-# Requirements To Tech Plan
+# Requirements To Tech
 
-## Overview
+## 目标
 
-Turn a raw requirement into a project-specific technical solution document.
+把“新增需求”转换成“实现前对齐文档”。
 
-Treat the latest architecture doc and the current codebase as the baseline. Design the increment required for the new requirement, but always include a concise current architecture snapshot so the new document can be read independently before any coding begins.
+这份技能的作用不是直接开始编码，而是先基于项目现状、现有约束和真实代码，把需求收敛成一份可执行、可验证、可回溯的技术方案，作为后续开发人员与模型共同遵循的实现目标，避免代码实现逐步偏离原始需求。
 
-## Required Outputs
+## 什么时候使用
 
-- Write one solution document to `docs/architectures/YYYY-MM-DD-[中文需求简称].md`.
-- Return a concise summary covering requirement source, baseline used, chosen stack, key impacts, and open questions.
-- Explicitly stop after the document is ready. Do not implement code until the user approves the plan.
+- 用户要求输出技术方案、技术设计、技术实现方案、架构方案、开发方案。
+- 用户提供了 PRD、需求文档、功能说明、设计稿，希望先对齐方案再开发。
+- 用户想新增页面、功能、模块，或进行结构调整、重构、项目初始化。
+- 需求跨多个模块、影响范围较大，直接编码容易出现理解漂移。
 
-## Workflow
+## 什么时候不必使用
 
-### 1. Confirm the requirement source
+- 只是一个非常小的局部修复，且目标、边界、实现方式都已经非常明确。
+- 用户明确要求直接实现，且任务足够简单，不需要单独形成技术方案文档。
+- 当前任务只是解释一段代码或回答一个局部技术问题。
 
-- If the user provides a requirement file, read it first.
-- If the user provides only a topic, search the repo for likely requirement Markdown files and ask the user to confirm the source.
-- If nothing usable exists, ask for a short written requirement before continuing.
+## 核心原则
 
-### 2. Establish baseline context
+- 必须先完成技术方案设计，再开始编码。
+- 技术方案必须建立在“当前项目事实”上，不能套用脱离上下文的通用模板。
+- 先盘点现状，再设计增量；必须区分“当前事实”“目标设计”“开放问题”。
+- 技术方案是后续实现的目标约束，不是可有可无的建议稿。
+- 简单需求可以简化方案，但不能跳过方案步骤。
+- 复杂需求必须按 `references/tech-plan-template.md` 输出完整方案。
+- 设计过程中如果发现关键歧义、规则缺失、边界不清、用户意图可能存在多解，必须及时向用户发问确认，不必等整份方案写完再集中提问。
+- 如果后续实现与方案冲突，必须先说明偏差并更新方案，不能静默偏离。
 
-- Scan `docs/architectures/*.md` and pick the newest baseline by date, then highest `vN` for the same date.
-- Read project constraints before making recommendations: package manager, framework, scripts, repo rules, current modules, and any local instruction files.
-- Compare the new requirement against the baseline docs and the current codebase. Define the increment explicitly.
-- Build two views in parallel:
-  - `增量方案`: what changes for this requirement.
-  - `当前完整架构快照`: a concise merged view of the baseline plus this increment, so the new file stands on its own.
+## 读取范围
 
-### 3. Handle optional inputs
+在生成技术方案前，必须读取与本次需求直接相关的项目信息，包括但不限于：
 
-- If a UI design file or link exists, extract theme tokens, reusable components, layout rules, interaction patterns, and engineering implications.
-- If the project needs a new frontend scaffold, include that work in the plan.
-- Prefer `Next.js + shadcn/ui` for SSR work and `Vite + React Router + TypeScript + shadcn/ui` for SPA work unless the repo context strongly indicates another choice.
+- 用户提供的需求描述、PRD、设计稿、说明文档。
+- 项目约定文件，例如 `AGENTS.md`、README、项目内规则文档。
+- 当前项目的构建配置、依赖配置、目录结构、核心代码入口。
+- 与需求直接相关的页面、组件、路由、接口、hooks、工具函数、架构文档。
 
-### 4. Research solution options
+这些内容必须在每次生成技术方案之前重新读取，不要把某个项目当前的技术栈、规则、文件路径、模块结构硬编码在本技能正文里。
 
-- Evaluate at least three realistic options.
-- Use current primary sources when comparing technology choices.
-- Compare learning curve, integration difficulty, ecosystem, maintenance health, adoption, migration cost, and fit for the existing repo.
-- If current research is blocked, say so explicitly and base the comparison on the best available project-local evidence.
-- Recommend one option and explain why the others lose in this specific context.
+## 明确忽略范围
 
-### 5. Write the solution document
+扫描项目代码时，不要把以下内容当成主要分析对象，除非用户明确要求：
 
-- Follow `references/tech-plan-template.md`.
-- Make the plan concrete: modules, directories, interfaces, API boundaries, shared components, shared logic, data flow, risks, rollout notes, regression scope, and a concise current architecture snapshot.
-- Use Mermaid diagrams for architecture and flow when text alone is not enough.
-- Add code snippets only when they clarify a difficult technical point. Do not pre-implement the feature.
+- `node_modules`
+- `dist`
+- `build`
+- `.next`
+- `.turbo`
+- `.cache`
+- `coverage`
+- 临时文件、缓存文件、日志文件
+- 大型产物目录、自动生成目录、无关截图或导出文件
 
-### 6. Save and present
+目标是聚焦“当前真实源码、配置、约定和需求相关文档”，避免被构建产物和依赖噪音干扰。
 
-- Create `docs/architectures/` if it does not exist.
-- Name the file `YYYY-MM-DD-[中文需求简称].md`.
-- Derive `[中文需求简称]` from the new requirement itself, keep it short and readable, and prefer 4-12 Chinese characters.
-- Remove punctuation, slashes, and generic suffixes such as `需求`, `方案`, or `设计` unless they are needed to disambiguate.
-- If the user explicitly gives a Chinese short name, use it as-is unless it would create an invalid filename.
-- Return the file path plus a short review checklist.
-- Stop and wait for approval before any coding.
+## 工作流程
 
-## Increment Rules
+### 1. 明确需求来源和输出目标
 
-- `新需求`: the requirement being solved now.
-- `存量技术方案`: the latest document under `docs/architectures/`.
-- `增量方案`: everything newly required after comparing the new requirement, baseline docs, and current code.
-- `当前完整架构快照`: a concise merged summary of the baseline architecture plus the approved increment, written into the new document for standalone reading.
-- Avoid rewriting the whole architecture unless the comparison shows the baseline is obsolete.
+- 先确认需求来自哪里：用户口述、PRD、需求文档、设计稿、缺陷描述或任务说明。
+- 用简洁语言总结本次要解决的问题、目标用户、预期结果和影响范围。
+- 如果用户没有指定文档落盘位置，必须输出到 `.tmp/docs/architectures/YYYY-MM-DD-[需求简称].md`。
+- 这里的 `[需求简称]` 必须使用本次需求的中文简称，直接取自需求语义本身，不要擅自改成英文、拼音、泛化主题词或自创标题。
+- `[需求简称]` 应尽量简短且可辨识，优先控制在 4 到 12 个中文字符内；如果需求本身较长，应提炼成能准确指代本次需求的中文短语。
+- 除非用户明确指定了其他路径或文件名，否则不得偏离上述命名格式。
+- 如果已经落盘但文件名不符合该规则，必须先重命名为合规文件名，再继续后续输出。
 
-## Non-Negotiables
+### 2. 读取项目现状
 
-- Follow `先文档、后编码`.
-- Respect project constraints and existing architecture before recommending a stack.
-- Label assumptions instead of inventing product rules.
-- Separate facts from inference when the codebase and docs disagree.
+- 读取项目规则、代码结构、依赖配置和相关模块。
+- 识别当前已有能力、当前缺口、可直接复用的模块和潜在冲突点。
+- 只读取与本次需求相关的文件，不做无边界全仓扫描。
 
-## Common Mistakes
+### 3. 做增量分析
 
-- Treating the requirement doc as sufficient without reading the codebase.
-- Producing a generic technology comparison that ignores the current repo.
-- Skipping impact analysis or regression scope.
-- Writing only delta notes and forgetting the standalone architecture snapshot.
-- Writing implementation-level detail where module-level design is enough.
-- Using opaque filenames such as `v2`, `final`, or `新版方案` instead of a Chinese requirement short name.
+- 明确本次是在现有基础上新增、替换、收敛、拆分还是初始化。
+- 列出 in scope / out of scope。
+- 如果需求本身存在模糊点，把它们列为假设或开放问题，不要擅自补完业务规则。
+- 对关键歧义要边分析边提问，及时向用户确认，而不是把所有问题拖到最后一次性询问。
 
-## Reference
+### 4. 设计技术方案
 
-- Use `references/tech-plan-template.md` for the document skeleton, comparison table, and diagram expectations.
+- 从真实代码结构出发，设计模块、目录、页面、组件、路由、接口、状态、数据流和错误处理。
+- 需要说明复用点、改造点、新增点和风险点。
+- 必须具备全局视野，不只解决当前页面或局部功能；要从公共组件抽取、全局主题变量、组件复用、接口参数设计、功能模块拆分、架构扩展性、可配置性、性能和系统枚举等方面统一设计。
+- 涉及 UI 时，要写清桌面端 / 移动端、关键状态、交互反馈和可访问性。
+- 涉及接口时，要写清请求入口、触发时机、返回处理、失败路径和登录失效行为。
+- 必须考虑异常状态处理，包括但不限于：无数据、加载中、接口报错、代码报错、权限受限、局部失败、重试与兜底。
+- 方案内容必须包含“重难点功能详细设计”，把复杂的、不易理解的、有争议的、用户重点关注的功能设计清楚，不能只停留在模块级罗列。
 
-## Agent Notes
+### 5. 需要建新项目时调用对应参考文档
 
-- Generic behavior: the requirement reading, baseline comparison, option analysis, and architecture write-up steps apply to any agent that can inspect files and write Markdown.
-- Codex-specific note: if the host environment exposes Codex-only tools such as direct plan or workspace helpers, use them to speed up inspection, but do not require them.
-- Fallback behavior: when an agent lacks the same tool surface, use plain repository search, shell commands, and manual document authoring while preserving the same output contract and stop-before-coding rule.
+如果需求涉及“创建项目”而不是“改已有项目”，必须读取对应 reference：
+
+- 前端项目：`references/create-frontend.md`
+- Python 项目：`references/create-python.md`
+- React Native 项目：`references/create-react-native.md`
+- Java 项目：`references/create-spring.md`
+
+这些 reference 用来补充项目初始化、技术选型、目录规划、依赖安装和后续技能安装要求。
+
+### 6. 输出方案
+
+- 简单需求：输出简化版技术方案，保留目标、现状、改造点、风险、验证方式。
+- 复杂需求：按 `references/tech-plan-template.md` 输出完整技术方案。
+- 输出结果必须能直接作为后续实现目标，而不是泛泛描述。
+
+### 7. 结束于方案，不进入编码
+
+- 技术方案完成后，应明确说明当前阶段只完成了方案设计。
+- 未经用户明确要求，不要继续写实现代码。
+
+## 技术方案必须包含什么
+
+无论是简版还是完整版，至少要覆盖：
+
+- 需求来源与目标
+- 当前现状与限制
+- 本次增量范围
+- 推荐实现路径
+- 目录 / 模块 / 组件 / API / 状态流设计
+- 全局设计考虑
+- 重难点功能详细设计
+- 异常状态处理设计
+- 风险与开放问题
+- 验证建议
+
+如果需求较复杂，还应补充：
+
+- 备选方案与取舍理由
+- 分阶段实施计划
+- 回滚或降级策略
+- Mermaid 图辅助说明
+
+## 输出要求
+
+最终输出应包含两部分：
+
+### 1. 方案文档结果
+
+- 文档路径
+- 或直接给出完整 Markdown 正文
+- 如果选择落盘文档，且用户未明确指定其他命名，则返回的文档路径必须是 `.tmp/docs/architectures/YYYY-MM-DD-[需求简称].md` 这一格式的实际文件路径，而不是语义接近但不合规的变体。
+
+### 2. 简洁摘要
+
+- 需求来源
+- 本次读取了哪些项目上下文
+- 推荐方案一句话结论
+- 主要影响范围
+- 风险与待确认项
+- 明确说明“当前仅完成技术方案，尚未开始编码”
+
+## 禁止事项
+
+- 不要跳过方案阶段直接写代码。
+- 不要只复述需求，不结合项目代码现状。
+- 不要把项目当前的技术栈、路径规则、目录结构固化在技能正文里。
+- 不要扫描无关目录制造噪音。
+- 不要在没有证据的情况下臆断接口、目录或模块职责。
+- 不要遗漏用户补充的关键细节；无法确定时应写入开放问题。
+- 不要只做局部设计而忽略系统级复用、扩展性、可配置性和异常处理。
+- 不要把复杂功能只用一句话带过，必须展开重难点详细设计。
+- 不要在用户未指定文件名时，自行把方案文档命名成英文标题、技术描述、topic slug、`tech-plan`、`design`、`proposal` 等变体文件名。
+
+## 自检清单
+
+- 是否先完成了技术方案，再考虑编码？
+- 是否读取了本次需求相关的项目规则和代码，而不是套模板？
+- 是否显式忽略了 `node_modules`、`dist`、缓存和临时产物？
+- 是否区分了“当前事实”“目标设计”“开放问题”？
+- 过程中如果出现关键歧义，是否已经及时向用户确认，而不是拖到最后？
+- 是否根据简单/复杂需求选择了合适的输出深度？
+- 是否包含全局设计、重难点功能详细设计和异常状态处理？
+- 如果涉及新项目创建，是否读取了对应的 reference 文档？
+- 输出是否足以作为后续实现目标，而不是仅供参考的说明？
+- 如果输出了落盘文档：文件名是否严格符合 `.tmp/docs/architectures/YYYY-MM-DD-[需求简称].md`，且 `[需求简称]` 使用的是本次需求的中文简称而不是英文自拟标题？
