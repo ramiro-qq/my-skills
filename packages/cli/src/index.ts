@@ -1,66 +1,33 @@
-import {
-  installSkill,
-  loadAllSkillManifests,
-  publishRepository,
-  writeRegistryIndex
-} from "../../core/src/index.js";
+import { loadRepositoryVersion, validateRepository } from "../../core/src/index.js";
 
 async function main() {
   const command = process.argv[2];
 
   if (command === "validate") {
-    const manifests = await loadAllSkillManifests("skills");
+    const report = await validateRepository(".");
+    const version = await loadRepositoryVersion(".");
 
-    for (const manifest of manifests) {
-      console.log(`validated ${manifest.name}@${manifest.version}`);
+    for (const skill of report.skills) {
+      console.log(`validated ${skill.name}@${version}`);
     }
 
-    console.log(`validated ${manifests.length} skills`);
-    return;
-  }
+    console.log("validated README install examples");
+    console.log("validated compatibility notes");
 
-  if (command === "build-registry") {
-    const registryIndex = await writeRegistryIndex("skills", "registry/index.json");
-    console.log(`wrote registry/index.json with ${registryIndex.skills.length} skills`);
-    return;
-  }
+    if (report.errors.length > 0) {
+      for (const error of report.errors) {
+        console.error(error);
+      }
 
-  if (command === "install") {
-    const repository = process.argv[3];
-    const skillName = process.argv[4];
-    const targetDir = process.argv[5] ?? ".";
-
-    if (!repository || !skillName) {
-      console.error("usage: install <repository> <skill-name> [target-dir]");
       process.exitCode = 1;
       return;
     }
 
-    const result = await installSkill({
-      repository,
-      skillName,
-      targetDir
-    });
-
-    console.log(`installed ${result.name}@${result.version} to ${result.installedPath}`);
+    console.log(`validated ${report.skills.length} skills`);
     return;
   }
 
-  if (command === "publish") {
-    const result = await publishRepository({
-      skillsDir: "skills",
-      registryPath: "registry/index.json"
-    });
-
-    for (const skill of result.skills) {
-      console.log(`published ${skill.name}@${skill.version}`);
-    }
-
-    console.log(`published ${result.skillCount} skills to ${result.registryPath}`);
-    return;
-  }
-
-  console.error("unknown command");
+  console.error("usage: validate");
   process.exitCode = 1;
 }
 

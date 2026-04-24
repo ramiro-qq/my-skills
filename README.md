@@ -1,127 +1,92 @@
 # my-skills
 
-一个用于发布、安装和维护 Skills 的仓库。
+一个面向 `skills.sh` 生态的 Agent Skills 内容仓库。
 
-- GitHub：`https://github.com/ramiro-qq/my-skills`
-- CLI：`my-skills`
-- 已发布 Skills 目录：`skills/`
-- 未发布想法目录：`docs/ideas/`
+这个仓库只维护标准 `SKILL.md` 技能内容、参考资料和多 Agent 使用说明，不再提供自定义安装器、registry 或 bootstrap 分发脚本。
 
-## 使用已发布 Skills
+## 安装
 
-面向其他项目使用者。
-
-前提：
-
-- 你的环境里有 `Node.js`
-- 目标项目目录已经准备好
-
-### 安装命令
-
-在你的项目目录执行：
+安装整个仓库里的已发布 skills：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ramiro-qq/my-skills/main/scripts/install-skill.mjs -o /tmp/install-skill.mjs && node /tmp/install-skill.mjs ramiro-qq/my-skills example-skill .
+npx skills add ramiro-qq/my-skills
 ```
 
-命令说明：
-
-- `curl ... install-skill.mjs`：直接下载仓库里的安装脚本，绕过 `npm exec github:...` 对 GitHub 包拉取的依赖
-- `ramiro-qq/my-skills`：已发布 Skill 的来源仓库
-- `example-skill`：要安装的 Skill 名称
-- `.`：安装到当前项目目录
-
-如果你本地访问 GitHub 包依赖很稳定，也可以继续使用 CLI 方式：
+只查看当前仓库可发现的 skills：
 
 ```bash
-npm exec --yes --package=github:ramiro-qq/my-skills my-skills install ramiro-qq/my-skills example-skill .
+npx skills add ramiro-qq/my-skills --list
 ```
 
-### 安装结果
+只安装一个 skill：
 
-安装完成后，Skill 会出现在你的项目目录：
+```bash
+npx skills add ramiro-qq/my-skills --skill requirements-to-tech
+```
+
+按指定 Agent 安装：
+
+```bash
+npx skills add ramiro-qq/my-skills --agent codex --agent claude-code
+```
+
+如果当前目录就是仓库本地副本，也可以直接用本地路径做 smoke test：
+
+```bash
+npx skills add . --list
+```
+
+## 仓库结构
+
+正式发布的 skills 只放在 `skills/` 下，并通过 `SKILL.md` frontmatter 暴露元数据。
 
 ```text
-.codex/skills/<skill-name>/
+skills/
+  example-skill/
+    SKILL.md
+    README.md
+  requirements-to-tech/
+    SKILL.md
+    references/
+docs/ideas/
 ```
 
-例如：
+- `skills/`: 正式发布的 skills
+- `docs/ideas/`: 草稿、原始方案和未发布想法，不参与对外 skills 发现
 
-```text
-.codex/skills/example-skill/
-```
+## 当前 Skills
 
-通常会包含：
-
-- `SKILL.md`
-- `skill.json`
-- `README.md`（可选）
-- `references/`（可选）
-- `scripts/`（可选）
-- `templates/`（可选）
-- `assets/`（可选）
-
-后续就在你的项目环境中，按该 Skill 目录下的 `SKILL.md` 说明使用它。
-
-## 已发布 Skills 集合
-
-| Skill | 描述 | 使用场景 |
+| Skill | Description | Primary Use Case |
 | --- | --- | --- |
-| `example-skill` | 最小正式 Skill 示例，用于验证仓库规范和目录结构。 | 新建 Skill 时参考目录结构和元数据写法；验证安装和工具链。 |
-| `requirements-to-tech` | 将需求文档、PRD 或新功能说明转成项目可落地的技术方案。 | 需要技术选型、架构设计、增量改造分析、影响范围评估，并且必须先出文档再进入编码。 |
+| `example-skill` | 最小可发布 skill 模板。 | 新建 skill 时参考目录结构、frontmatter 和兼容说明写法。 |
+| `requirements-to-tech` | 把需求文档或功能说明转成可审阅的技术方案。 | 需要先完成技术调研、技术选型、影响分析，再进入实现。 |
 
-## 开发与发布 Skill
+## Multi-Agent Compatibility
 
-面向仓库维护者和 Skill 开发者。
+| Agent | Install Target | Expected Behavior |
+| --- | --- | --- |
+| Codex | `npx skills add ramiro-qq/my-skills --agent codex` | 优先验证。必要时在 skill 内标注 Codex 专属工具名，并提供通用降级说明。 |
+| Claude Code | `npx skills add ramiro-qq/my-skills --agent claude-code` | 使用相同 skill 内容，按技能内的 Agent Notes 替换工具调用或工作流表达。 |
+| Cursor / generic `.agents` consumers | `npx skills add ramiro-qq/my-skills --agent cursor` | 依赖标准 `SKILL.md` 发现与安装，不假设 Codex 专属目录结构。 |
 
-### 1. 记录未发布想法
+## Authoring Rules
 
-如果一个 Skill 还在构思阶段，先在 `docs/ideas/` 下新增 Markdown 文件记录目标、场景和待完善点。
+- `SKILL.md` frontmatter 是唯一权威元数据源，至少包含 `name` 和 `description`
+- 兼容性说明必须写在 skill 正文的 `Agent Notes` 或 `Compatibility` 段落中
+- 不要在 skill 主流程里硬编码安装路径
+- 附属资料可以放在 `README.md`、`references/`、`scripts/`、`assets/`
 
-### 2. 创建正式 Skill
-
-在 `skills/` 下创建目录，最少包含：
-
-```text
-skills/your-skill/
-  SKILL.md
-  skill.json
-```
-
-可按需补充：
-
-```text
-skills/your-skill/
-  README.md
-  scripts/
-  templates/
-  assets/
-```
-
-### 3. 本地校验与测试
+## 本地校验
 
 ```bash
 npm install
 npm run validate
 npm test
-npm run build
 ```
 
-### 4. 生成并更新发布索引
+`npm run validate` 只校验仓库内容质量：
 
-```bash
-npm run registry
-npm run publish:skills
-```
-
-### 5. 推送到 GitHub
-
-将变更推送到远程仓库后，由 GitHub Actions 执行自动校验、测试和 registry 更新。
-
-## 未发布 Skills 集合说明
-
-`docs/ideas/` 用于保留 Skill 草案、未发布想法，以及已经正式发布但仍需要保留的原始方案文档，便于后续迭代对照。
-
-当前保留文档：
-
-- `docs/ideas/技术方案.md`：`requirements-to-tech` 的原始草案，正式 Skill 发布后继续保留。
+- `SKILL.md` frontmatter 可解析
+- README 安装示例对齐 `skills` CLI
+- 每个已发布 skill 都有多 Agent 兼容说明
+- 仓库中不存在旧的 installer、registry 或旧 manifest 残留

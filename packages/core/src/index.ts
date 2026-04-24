@@ -1,365 +1,148 @@
-import { execFile } from "node:child_process";
-import {
-  access,
-  copyFile,
-  mkdir,
-  mkdtemp,
-  readFile,
-  readdir,
-  rm,
-  writeFile
-} from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { promisify } from "node:util";
+import { readFile, readdir } from "node:fs/promises";
+import { join } from "node:path";
 
-import { parseSkillManifest, type SkillManifest } from "../../schema/src/index.js";
+import { parseSkillFrontmatter, type SkillFrontmatter } from "../../schema/src/index.js";
 
-const execFileAsync = promisify(execFile);
-
-export type LoadedSkillManifest = SkillManifest & {
-  manifestPath: string;
+export type LoadedSkill = SkillFrontmatter & {
   path: string;
+  sourcePath: string;
 };
 
-export type RegistryIndex = {
-  skills: Array<{
-    name: string;
-    version: string;
-    description?: string;
-    entry: string;
-    files: string[];
-    installPath: string;
-    path: string;
-  }>;
+export type ValidationReport = {
+  errors: string[];
+  skills: LoadedSkill[];
 };
 
-export type RepositorySource =
-  | {
-      type: "local";
-      rootDir: string;
-    }
-  | {
-      type: "github";
-      repo: string;
-      ref: string;
-    };
+const requiredReadmeSnippets = [
+  "npx skills add ramiro-qq/my-skills",
+  "npx skills add ramiro-qq/my-skills --list",
+  "npx skills add ramiro-qq/my-skills --skill requirements-to-tech",
+  "npx skills add ramiro-qq/my-skills --agent codex --agent claude-code"
+];
 
-export type InstallSkillOptions = {
-  repository: string;
-  skillName: string;
-  targetDir: string;
-};
+const legacyReadmePatterns = [
+  "my-skills install",
+  "install-skill.mjs",
+  "registry/index.json",
+  "skill.json"
+];
 
-export type InstallSkillResult = {
-  name: string;
-  version: string;
-  installedPath: string;
-};
-
-export type PublishRepositoryOptions = {
-  skillsDir: string;
-  registryPath: string;
-};
-
-export type PublishRepositoryResult = {
-  registryPath: string;
-  skillCount: number;
-  skills: Array<{
-    name: string;
-    version: string;
-  }>;
-};
-
-export async function loadSkillManifest(filePath: string): Promise<SkillManifest> {
-  const raw = await readFile(filePath, "utf8");
-  return parseSkillManifest(JSON.parse(raw));
+function hasCompatibilityNotes(source: string): boolean {
+  return /##\s+(Agent Notes|Compatibility)/i.test(source);
 }
 
-export async function loadAllSkillManifests(rootDir: string): Promise<LoadedSkillManifest[]> {
+async function readRepositoryVersion(rootDir: string): Promise<string> {
+  const packageJson = JSON.parse(await readFile(join(rootDir, "package.json"), "utf8")) as {
+    version?: string;
+  };
+
+  return packageJson.version ?? "0.0.0";
+}
+
+export async function loadPublishedSkills(rootDir: string): Promise<LoadedSkill[]> {
   const entries = await readdir(rootDir, { withFileTypes: true });
-  const manifests: LoadedSkillManifest[] = [];
+  const skills: LoadedSkill[] = [];
 
   for (const entry of entries) {
     if (!entry.isDirectory() || entry.name.startsWith(".")) {
       continue;
     }
 
-    const manifestPath = join(rootDir, entry.name, "skill.json");
+    const sourcePath = join(rootDir, entry.name, "SKILL.md");
+    let source: string;
 
     try {
-      await access(manifestPath);
+      source = await readFile(sourcePath, "utf8");
     } catch {
       continue;
     }
 
-    const manifest = await loadSkillManifest(manifestPath);
-    manifests.push({
-      ...manifest,
-      manifestPath,
-      path: join(rootDir, entry.name)
+    const skill = parseSkillFrontmatter(source);
+
+    if (skill.metadata?.internal) {
+      continue;
+    }
+
+    skills.push({
+      ...skill,
+      path: join(rootDir, entry.name),
+      sourcePath
     });
   }
 
-  return manifests.sort((left, right) => left.name.localeCompare(right.name));
+  return skills.sort((left, right) => left.name.localeCompare(right.name));
 }
 
-export async function buildRegistryIndex(rootDir: string): Promise<RegistryIndex> {
-  const manifests = await loadAllSkillManifests(rootDir);
+async function collectLegacyFiles(rootDir: string): Promise<string[]> {
+  const legacyFiles: string[] = [];
+  const entries = await readdir(rootDir, { withFileTypes: true });
 
-  return {
-    skills: manifests.map(({ name, version, description, entry, files, installPath, path }) => ({
-      name,
-      version,
-      description,
-      entry,
-      files,
-      installPath,
-      path
-    }))
-  };
-}
+  for (const entry of entries) {
+    const absolutePath = join(rootDir, entry.name);
 
-export async function writeRegistryIndex(
-  rootDir: string,
-  outputPath: string
-): Promise<RegistryIndex> {
-  const registryIndex = await buildRegistryIndex(rootDir);
-  const serialized = `${JSON.stringify(registryIndex, null, 2)}\n`;
-
-  await mkdir(dirname(outputPath), { recursive: true });
-  await writeFile(outputPath, serialized, "utf8");
-
-  return registryIndex;
-}
-
-export function parseRepositorySource(repository: string): RepositorySource {
-  const githubMatch = repository.match(/^([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)(?:#([A-Za-z0-9_.\-/]+))?$/);
-
-  if (
-    repository.startsWith(".") ||
-    repository.startsWith("/") ||
-    repository.startsWith("file:") ||
-    !githubMatch
-  ) {
-    return {
-      type: "local",
-      rootDir: repository
-    };
-  }
-
-  return {
-    type: "github",
-    repo: githubMatch[1],
-    ref: githubMatch[2] ?? "main"
-  };
-}
-
-async function readRegistryIndexFromLocalRepo(rootDir: string): Promise<RegistryIndex> {
-  const registryPath = join(rootDir, "registry", "index.json");
-
-  try {
-    const raw = await readFile(registryPath, "utf8");
-    return JSON.parse(raw) as RegistryIndex;
-  } catch {
-    return buildRegistryIndex(join(rootDir, "skills"));
-  }
-}
-
-async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
-  }
-
-  return (await response.json()) as T;
-}
-
-async function fetchText(url: string): Promise<string> {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
-  }
-
-  return response.text();
-}
-
-async function fetchBytes(url: string): Promise<Uint8Array> {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
-  }
-
-  return new Uint8Array(await response.arrayBuffer());
-}
-
-function getGitHubRawBaseUrl(): string {
-  return (process.env.MY_SKILLS_GITHUB_RAW_BASE ?? "https://raw.githubusercontent.com").replace(
-    /\/$/,
-    ""
-  );
-}
-
-function getGitHubCloneBaseUrl(): string {
-  return (process.env.MY_SKILLS_GITHUB_GIT_BASE ?? "https://github.com").replace(/\/$/, "");
-}
-
-async function cloneGitHubRepository(repo: string, ref: string): Promise<string> {
-  const cloneDir = await mkdtemp(join(tmpdir(), "my-skills-github-clone-"));
-  const cloneUrl = `${getGitHubCloneBaseUrl()}/${repo}.git`;
-
-  try {
-    await execFileAsync("git", ["clone", "--depth", "1", "--branch", ref, cloneUrl, cloneDir]);
-  } catch (error) {
-    await rm(cloneDir, { recursive: true, force: true });
-    throw error;
-  }
-
-  return cloneDir;
-}
-
-async function loadRegistryIndexFromSource(source: RepositorySource): Promise<RegistryIndex> {
-  if (source.type === "local") {
-    return readRegistryIndexFromLocalRepo(source.rootDir);
-  }
-
-  const baseUrl = `${getGitHubRawBaseUrl()}/${source.repo}/${source.ref}`;
-  return fetchJson<RegistryIndex>(`${baseUrl}/registry/index.json`);
-}
-
-function validateRelativeInstallFile(file: string): string {
-  if (!file || file.startsWith("/") || file.split("/").includes("..")) {
-    throw new Error(`Invalid install file path: ${file}`);
-  }
-
-  return file;
-}
-
-async function installFromLocalSource(
-  rootDir: string,
-  skillPath: string,
-  installFiles: string[],
-  destinationDir: string
-): Promise<void> {
-  for (const file of installFiles) {
-    const safeFile = validateRelativeInstallFile(file);
-    const sourcePath = join(rootDir, skillPath, safeFile);
-    const targetPath = join(destinationDir, safeFile);
-
-    await mkdir(dirname(targetPath), { recursive: true });
-    await copyFile(sourcePath, targetPath);
-  }
-}
-
-async function installFromGitHubSource(
-  repo: string,
-  ref: string,
-  skillPath: string,
-  installFiles: string[],
-  destinationDir: string
-): Promise<void> {
-  const baseUrl = `${getGitHubRawBaseUrl()}/${repo}/${ref}/${skillPath}`;
-
-  for (const file of installFiles) {
-    const safeFile = validateRelativeInstallFile(file);
-    const targetPath = join(destinationDir, safeFile);
-    const content = await fetchBytes(`${baseUrl}/${safeFile}`);
-
-    await mkdir(dirname(targetPath), { recursive: true });
-    await writeFile(targetPath, content);
-  }
-}
-
-export async function installSkill(options: InstallSkillOptions): Promise<InstallSkillResult> {
-  const source = parseRepositorySource(options.repository);
-  let fallbackCloneDir: string | null = null;
-
-  try {
-    const registryIndex = await loadRegistryIndexFromSource(source);
-    const registryEntry = registryIndex.skills.find((skill) => skill.name === options.skillName);
-
-    if (!registryEntry) {
-      throw new Error(`Skill not found in registry: ${options.skillName}`);
-    }
-
-    const installedPath = join(options.targetDir, registryEntry.installPath);
-    const installFiles = Array.from(new Set(["skill.json", ...registryEntry.files]));
-
-    await mkdir(installedPath, { recursive: true });
-
-    if (source.type === "local") {
-      await installFromLocalSource(source.rootDir, registryEntry.path, installFiles, installedPath);
-    } else {
-      try {
-        await installFromGitHubSource(
-          source.repo,
-          source.ref,
-          registryEntry.path,
-          installFiles,
-          installedPath
-        );
-      } catch {
-        fallbackCloneDir = await cloneGitHubRepository(source.repo, source.ref);
-        await installFromLocalSource(
-          fallbackCloneDir,
-          registryEntry.path,
-          installFiles,
-          installedPath
-        );
+    if (entry.isDirectory()) {
+      if (entry.name === "node_modules" || entry.name === ".git") {
+        continue;
       }
+
+      legacyFiles.push(...(await collectLegacyFiles(absolutePath)));
+      continue;
     }
 
-    return {
-      name: registryEntry.name,
-      version: registryEntry.version,
-      installedPath
-    };
-  } catch (error) {
-    if (source.type !== "github") {
-      throw error;
-    }
-
-    fallbackCloneDir = await cloneGitHubRepository(source.repo, source.ref);
-    const registryIndex = await readRegistryIndexFromLocalRepo(fallbackCloneDir);
-    const registryEntry = registryIndex.skills.find((skill) => skill.name === options.skillName);
-
-    if (!registryEntry) {
-      throw new Error(`Skill not found in registry: ${options.skillName}`);
-    }
-
-    const installedPath = join(options.targetDir, registryEntry.installPath);
-    const installFiles = Array.from(new Set(["skill.json", ...registryEntry.files]));
-
-    await mkdir(installedPath, { recursive: true });
-    await installFromLocalSource(fallbackCloneDir, registryEntry.path, installFiles, installedPath);
-
-    return {
-      name: registryEntry.name,
-      version: registryEntry.version,
-      installedPath
-    };
-  } finally {
-    if (fallbackCloneDir) {
-      await rm(fallbackCloneDir, { recursive: true, force: true });
+    if (
+      entry.name === "skill.json" ||
+      absolutePath.endsWith("registry/index.json") ||
+      absolutePath.endsWith("scripts/install-skill.mjs")
+    ) {
+      legacyFiles.push(absolutePath);
     }
   }
+
+  return legacyFiles;
 }
 
-export async function publishRepository(
-  options: PublishRepositoryOptions
-): Promise<PublishRepositoryResult> {
-  const manifests = await loadAllSkillManifests(options.skillsDir);
-  await writeRegistryIndex(options.skillsDir, options.registryPath);
+export async function validateRepository(rootDir: string): Promise<ValidationReport> {
+  const skillsRoot = join(rootDir, "skills");
+  const skills = await loadPublishedSkills(skillsRoot);
+  const errors: string[] = [];
+  const readme = await readFile(join(rootDir, "README.md"), "utf8");
+
+  for (const snippet of requiredReadmeSnippets) {
+    if (!readme.includes(snippet)) {
+      errors.push(`README is missing install example: ${snippet}`);
+    }
+  }
+
+  for (const pattern of legacyReadmePatterns) {
+    if (readme.includes(pattern)) {
+      errors.push(`README still references legacy distribution detail: ${pattern}`);
+    }
+  }
+
+  if (!readme.includes("| Agent |") || !readme.includes("Codex") || !readme.includes("Claude Code")) {
+    errors.push("README is missing the multi-agent compatibility matrix");
+  }
+
+  for (const skill of skills) {
+    const source = await readFile(skill.sourcePath, "utf8");
+
+    if (!hasCompatibilityNotes(source)) {
+      errors.push(`${skill.name} is missing Agent Notes / Compatibility guidance`);
+    }
+  }
+
+  const legacyFiles = await collectLegacyFiles(rootDir);
+
+  if (legacyFiles.length > 0) {
+    errors.push(`Repository still contains legacy installer artifacts: ${legacyFiles.join(", ")}`);
+  }
 
   return {
-    registryPath: options.registryPath,
-    skillCount: manifests.length,
-    skills: manifests.map(({ name, version }) => ({
-      name,
-      version
-    }))
+    errors,
+    skills
   };
+}
+
+export async function loadRepositoryVersion(rootDir: string): Promise<string> {
+  return readRepositoryVersion(rootDir);
 }

@@ -92,3 +92,9 @@ Treat the latest architecture doc and the current codebase as the baseline. Desi
 ## Reference
 
 - Use `references/tech-plan-template.md` for the document skeleton, comparison table, and diagram expectations.
+
+## Agent Notes
+
+- Generic behavior: the requirement reading, baseline comparison, option analysis, and architecture write-up steps apply to any agent that can inspect files and write Markdown.
+- Codex-specific note: if the host environment exposes Codex-only tools such as direct plan or workspace helpers, use them to speed up inspection, but do not require them.
+- Fallback behavior: when an agent lacks the same tool surface, use plain repository search, shell commands, and manual document authoring while preserving the same output contract and stop-before-coding rule.

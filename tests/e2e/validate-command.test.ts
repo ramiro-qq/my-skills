@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 const execFileAsync = promisify(execFile);
 
 describe("validate command", () => {
-  it("validates every skill in the skills directory", async () => {
+  it("validates skills, compatibility notes, and README install guidance", async () => {
     const result = await execFileAsync("node", [
       "--import",
       "tsx",
@@ -16,6 +16,8 @@ describe("validate command", () => {
 
     expect(result.stdout).toContain("validated example-skill@0.1.0");
     expect(result.stdout).toContain("validated requirements-to-tech@0.1.0");
+    expect(result.stdout).toContain("validated README install examples");
+    expect(result.stdout).toContain("validated compatibility notes");
     expect(result.stdout).toContain("validated 2 skills");
   });
 });
