@@ -62,14 +62,23 @@ npx skills add .
 # 列出本仓库可发现的 skills
 npx skills add . --list
 
-# 安装到 Codex
+# 远程 shorthand + 单 skill + Codex
+npx skills add ramiro-qq/my-skills --skill requirements-to-tech --agent codex --copy -y
+
+# 完整 GitHub URL + 单 skill + Codex
+npx skills add https://github.com/ramiro-qq/my-skills --skill requirements-to-tech --agent codex --copy -y
+
+# 本地路径 + 单 skill + Codex
 npx skills add /path/to/my-skills --skill requirements-to-tech --agent codex --copy -y
 
-# 安装到 Claude Code
+# 本地路径 + 单 skill + Claude Code
 npx skills add /path/to/my-skills --skill requirements-to-tech --agent claude-code --copy -y
 
-# 安装到 Cursor / generic .agents consumers
+# 本地路径 + 单 skill + Cursor / generic .agents consumers
 npx skills add /path/to/my-skills --skill requirements-to-tech --agent cursor --copy -y
+
+# 本地路径 + 全量 published skills + Codex
+npx skills add /path/to/my-skills --skill '*' --agent codex --copy -y
 ```
 
 如果你只是想确认仓库结构是否被 `skills` CLI 正确识别，优先使用 `--list`。  
@@ -80,11 +89,17 @@ npx skills add /path/to/my-skills --skill requirements-to-tech --agent cursor --
 面向 Codex 的推荐安装和验证命令固定为下面几条：
 
 ```bash
-# 安装一个 skill 到当前项目
+# 远程 shorthand：安装一个 skill 到当前项目
 npx skills add ramiro-qq/my-skills --skill requirements-to-tech --agent codex --copy -y
 
-# 安装全部 skills 到当前项目
-npx skills add ramiro-qq/my-skills --skill '*' --agent codex --copy -y
+# 完整 GitHub URL：安装一个 skill 到当前项目
+npx skills add https://github.com/ramiro-qq/my-skills --skill requirements-to-tech --agent codex --copy -y
+
+# 本地路径：安装一个 skill 到当前项目
+npx skills add /path/to/my-skills --skill requirements-to-tech --agent codex --copy -y
+
+# 本地路径：安装全部 skills 到当前项目
+npx skills add /path/to/my-skills --skill '*' --agent codex --copy -y
 
 # 全局安装到当前用户
 npx skills add ramiro-qq/my-skills --skill requirements-to-tech --agent codex --copy -g -y
