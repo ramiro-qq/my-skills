@@ -8,6 +8,7 @@ describe("loadPublishedSkills", () => {
 
     expect(skills.map((item) => item.name)).toEqual([
       "example-skill",
+      "implement-ui-from-design",
       "integration-debug",
       "requirements-to-tech"
     ]);
