@@ -7,8 +7,8 @@ describe("loadPublishedSkills", () => {
     const skills = await loadPublishedSkills("skills");
 
     expect(skills.map((item) => item.name)).toEqual([
+      "design-to-code",
       "example-skill",
-      "implement-ui-from-design",
       "integration-debug",
       "requirements-to-tech"
     ]);

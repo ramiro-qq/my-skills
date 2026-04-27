@@ -14,6 +14,7 @@ describe("validate command", () => {
       "validate"
     ]);
 
+    expect(result.stdout).toContain("validated design-to-code@0.1.0");
     expect(result.stdout).toContain("validated example-skill@0.1.0");
     expect(result.stdout).toContain("validated implement-ui-from-design@0.1.0");
     expect(result.stdout).toContain("validated integration-debug@0.1.0");

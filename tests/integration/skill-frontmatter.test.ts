@@ -48,21 +48,22 @@ describe("parseSkillFrontmatter", () => {
     });
   });
 
-  it("loads the implement-ui-from-design skill metadata", async () => {
-    const source = await readFile("skills/implement-ui-from-design/SKILL.md", "utf8");
-
-    const skill = parseSkillFrontmatter(source);
-
-    expect(skill).toMatchObject({
-      name: "implement-ui-from-design",
-      license: "MIT"
-    });
-    expect(skill.tags).toContain("ui");
-    expect(skill.metadata).toMatchObject({
-      author: "ramiro.li",
-      version: "0.0.1"
-    });
-  });
+
+  it("loads the design-to-code skill metadata", async () => {
+    const source = await readFile("skills/design-to-code/SKILL.md", "utf8");
+
+    const skill = parseSkillFrontmatter(source);
+
+    expect(skill).toMatchObject({
+      name: "design-to-code",
+      license: "MIT"
+    });
+    expect(skill.tags).toContain("figma");
+    expect(skill.metadata).toMatchObject({
+      author: "ramiro.li",
+      version: "0.0.1"
+    });
+  });
 
   it("rejects a skill file without frontmatter metadata", () => {
     expect(() => parseSkillFrontmatter("# Missing metadata\n")).toThrow(/frontmatter/i);

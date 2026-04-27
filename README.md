@@ -77,13 +77,13 @@ npx skills add ramiro-qq/my-skills --skill integration-debug --agent codex --cop
 
 `integration-debug` 适合前后端联调、接口契约核对、异常数据兼容检查、整体流程回归和浏览器证据采集场景。
 
-如果你要安装设计稿高还原实现技能，推荐直接使用：
+如果你要安装设计转代码技能，推荐直接使用：
 
 ```bash
-npx skills add ramiro-qq/my-skills --skill implement-ui-from-design --agent codex --copy -y
+npx skills add ramiro-qq/my-skills --skill design-to-code --agent codex --copy -y
 ```
 
-`implement-ui-from-design` 适合基于设计稿做高还原前端开发，先读需求、业务、项目规则和现状代码，再区分新增或增量改造并完成高质量实现。
+`design-to-code` 适合 Figma、截图、Pencil 原型转前端代码，以及生成后基于截图比对做高还原修复的场景。
 
 更多安装路径和故障排查见 [docs/install.md](/Users/ramiroli/root/apps/github/my-skills/docs/install.md)。
 
@@ -91,7 +91,7 @@ npx skills add ramiro-qq/my-skills --skill implement-ui-from-design --agent code
 
 | Skill | Description | Use Case |
 | --- | --- | --- |
+| `design-to-code` | 将 Figma 链接、截图或 Pencil 导出稿归一化后转成高还原、可维护、可视觉校验的前端代码。 | 设计转代码、截图还原、原型落地、视觉回归修复、批量页面生成场景。 |
 | `example-skill` | 最小可发布 skill 模板。 | 参考标准 `SKILL.md` 结构与发布写法。 |
-| `implement-ui-from-design` | 结合需求、项目规则和现状代码，把 UI 设计稿映射成高还原前端实现。 | 设计稿还原、高质量页面改造、新增页面或增量 UI 开发场景。 |
 | `integration-debug` | 将前端、后端和下游服务串起来做联调，并整理接口清单、核对请求响应、收敛阻塞项。 | 前后端联调、接口联调、验收前串联调试场景。 |
 | `requirements-to-tech` | 将需求文档或功能说明转成可审阅的技术方案。 | 先出方案、再编码的需求分析与技术设计场景。 |
