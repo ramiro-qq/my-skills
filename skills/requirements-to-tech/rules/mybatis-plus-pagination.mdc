@@ -1,0 +1,33 @@
+---
+description: 列表分页统一使用 MyBatis-Plus Page/selectPage，禁止手工 LIMIT+count
+globs: "**/adapter/controller/**/*.java,**/app/service/**/*.java,**/app/impl/**/*.java,**/infra/persistence/**/*.java"
+alwaysApply: false
+---
+
+# MyBatis-Plus 分页规范
+
+## 一、适用范围
+
+- 所有“列表查询 + 分页返回”的后端接口与应用层实现（尤其是 `CommonResponse<PageResultDTO<...>>`）。
+
+## 二、强制约束
+
+- 分页查询**必须**使用 MyBatis-Plus 的 `Page<T>` + `selectPage(...)`。
+- **禁止**使用手工分页组合：
+  - `selectCount(...)` + `selectList(...).last("LIMIT offset,size")`
+  - 自己拼接 `LIMIT` 字符串进行分页
+
+## 三、推荐写法
+
+- 参数归一化后创建分页对象：`Page<PO> page = new Page<>(pageNo, pageSize)`。
+- 构建统一 `QueryWrapper`（筛选 + 排序）。
+- 调用 `mapper.selectPage(page, wrapper)`，并使用：
+  - `resultPage.getRecords()` 作为列表数据
+  - `resultPage.getTotal()` 作为总数
+- 最终返回统一封装：`PageResultDTO.of(pageNo, pageSize, total, items)`。
+
+## 四、兼容性要求
+
+- 对外 API 的分页入参（如 `pageNo/page/pageSize`）可做兼容，但内部实现统一收敛到 `selectPage`。
+- 新增或重构分页接口时，优先复用已有 Query DTO，避免继续扩散多散参方法。
+

@@ -1,0 +1,103 @@
+---
+alwaysApply: true
+---
+
+---
+description: 项目 DDD 分层架构与各层职责（adapter / app / domain / infra / common）
+globs: "**/adapter/**,**/app/**,**/domain/**,**/infra/**,**/common/**"
+alwaysApply: false
+---
+
+# 项目分层架构规范
+
+## 一、整体分层原则
+
+### 1. 领域驱动设计核心分层
+
+项目采用清晰的**四层架构**，各层职责单一，依赖方向稳定（**外层依赖内层，内层不依赖外层**）：
+
+| 层级 | 说明 |
+|------|------|
+| **adapter** | 对外适配层：处理外部请求与响应 |
+| **app** | 业务编排层：编排领域服务，实现跨域流程 |
+| **domain** | 领域层（核心）：业务核心逻辑与领域对象 |
+| **infra** | 基础设施层：持久化、外部系统调用等技术实现 |
+
+另设 **common** 公共层，提供无业务属性的通用能力（常量、工具、通用 DTO 等）。
+
+---
+
+## 二、各层职责与规范
+
+### 1. adapter 对外适配层
+
+- **职责**：处理外部请求与响应适配，仅存放 **controller**、**web 相关 config**。
+- **目录建议**：`controller/`、`config/`
+- **规范**：
+  - 不包含业务逻辑，仅做**参数校验、格式转换、请求转发**。
+  - **依赖 app 层的 ports 接口**，不直接依赖 domain 层。
+  - 不引入领域对象，通过 app 层 DTO 与上层交互。
+
+### 2. app 业务流程编排层
+
+- **职责**：编排领域服务实现跨域业务流程。
+- **目录建议**：`impl/`（流程实现）、`vo/`（接口实现跟返回的对象）、`dto/`（数据传输对象）
+- **规范**：
+  - **依赖 domain 层的领域服务**，不直接操作数据库或外部系统。
+  - 通过 **dto** 进行数据传输，**不向 adapter 暴露领域对象**。
+  - 编排多个领域服务完成用例，处理事务边界与跨域协调。
+
+### 3. domain 领域层（核心层）
+
+- **职责**：封装业务核心逻辑、领域对象与领域服务。
+- **目录建议**：
+  - **enums/**：领域对象的枚举定义。
+  - **model/**：领域对象（实体、值对象、聚合根），可包含自身行为。
+  - **service/**：领域服务，含 `impl` 实现；处理跨实体的业务逻辑。
+  - **repository/**：持久化**接口**定义，可含接口用 dto；由 infra 实现。
+- **规范**：
+  - **model**：领域对象不依赖 adapter/app/infra，仅依赖同层或 common 中的纯工具/常量。
+  - **service**：仅依赖领域对象与 repository 接口，不依赖具体存储技术。
+  - **repository**：只定义接口，由 infra 的 persistence 实现；领域层不关心数据库细节。
+
+### 4. infra 基础设施层
+
+- **职责**：实现持久化、外部系统调用等技术细节。
+- **目录建议**：
+  - **persistence/**：实现 domain 层 repository 接口，操作数据库；其下可细分为：
+    - **mapper/primary/**：存放 MyBatis-Plus 的 Mapper 接口（如 `XxxMapper extends BaseMapper<XxxPO>`）。
+    - **po/**：对应数据库表的持久化对象（实体类），与表结构一一对应。
+    - **repository/**：domain 层 Repository 接口的实现类，依赖 mapper 与 po，完成 PO 与领域对象转换。
+  - **external/**：封装第三方服务调用；其下可细分为：
+    - **service/**：存放外部调用的接口定义。
+    - **service/impl/**：存放外部调用的接口实现。
+    - **vo/**：对外调用接口的返回实体。
+  - **config/**：基础设施相关配置。
+- **规范**：
+  - **persistence**：repository 实现类依赖 mapper、po，完成 po 与领域对象映射，不包含业务规则；可选用 MyBatis-Plus 的 ServiceImpl/IService 等。
+  - **external**：封装三方调用，对外提供稳定接口供 app/domain 使用。
+  - **不包含业务逻辑**，仅做技术能力支撑。
+
+### 5. common 公共层
+
+- **职责**：无业务属性的通用能力。
+- **目录建议**：`constants/`、`dto/`、`util/`
+- **规范**：不依赖任何业务模块，可被各层引用；仅放通用常量、工具类、通用 DTO。
+
+---
+
+## 三、依赖方向（强制）
+
+```
+adapter → app → domain
+    ↓       ↓      ↑
+ common   common  infra（实现 domain 的 repository 等）
+```
+
+- **adapter** 只依赖 **app** 的 ports，不依赖 domain、infra。
+- **app** 只依赖 **domain** 的 service/repository 接口，不依赖 infra 实现。
+- **domain** 不依赖 adapter、app、infra，仅定义 repository 等接口。
+- **infra** 实现 domain 的 repository 等接口，可依赖 common。
+- **common** 不被业务层反向依赖，仅被引用。
+
+新增或修改代码时，须符合上述分层与依赖方向，不得出现外层被内层依赖或跨层直连（如 adapter 直接依赖 domain、app 直接依赖 infra 实现等）。

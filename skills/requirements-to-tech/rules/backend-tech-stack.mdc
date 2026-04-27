@@ -1,0 +1,29 @@
+---
+alwaysApply: true
+---
+
+---
+description: 后端技术栈约束 - Spring Boot 3.5.9、JDK 21
+globs: "**/pom.xml,**/src/main/java/**/*.java"
+alwaysApply: false
+---
+
+# 后端技术约束
+
+## 一、版本约定
+
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| **JDK** | 21 | 编译与运行使用 Java 21 |
+| **Spring Boot** | 3.5.9 | 父 POM 与 starter 版本统一 |
+
+## 二、依赖与 API 约定
+
+- **校验**：使用 `jakarta.validation`（如 `@Valid`、`@NotBlank`），**不得**使用 `javax.validation`。
+- **MyBatis-Plus**：使用适配 Spring Boot 3.x 的 `mybatis-plus-spring-boot3-starter`，**不得**使用 `mybatis-plus-boot-starter`。
+- **MySQL 驱动**：使用 `mysql-connector-j`（由 Spring Boot 3 父 POM 管理），**不得**使用 `mysql-connector-java`。
+
+## 三、新增或升级依赖时
+
+- 保持 **java.version** 为 **21**、**spring-boot-starter-parent** 为 **3.5.9**。
+- 引入的第三方库须兼容 JDK 21 与 Spring Boot 3.5.x。

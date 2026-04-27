@@ -1,0 +1,53 @@
+---
+description: Java 注释风格统一（方法 Javadoc + 关键逻辑行注释）
+globs: **/*.java
+alwaysApply: false
+---
+
+# Java 注释统一规范
+
+## 目标
+
+让关键方法和关键字段的注释格式一致，避免“有注释但风格混乱”。
+
+## 规则
+
+1. **方法注释统一使用 Javadoc**：`/** ... */`
+2. **方法体关键逻辑统一使用单行注释**：`// ...`
+3. **简单 getter/setter/直白语句不加注释**
+4. 注释解释“为什么/约束”，不要复述代码“做了什么”
+
+## 方法注释模板（必选）
+
+```java
+/**
+ * <一句话说明职责/业务目的>
+ *
+ * @param xxx <关键参数语义，可省略非关键参数>
+ * @return <返回值业务含义，无返回值可省略>
+ */
+```
+
+## 字段注释模板（关键字段必选）
+
+```java
+// <映射关系/约束边界/使用场景>
+private final Map<String, String> providerSessionToSession;
+```
+
+## 方法体注释模板（关键逻辑处）
+
+```java
+// 先做顺序校验并刷新活跃时间，再记录业务事件。
+```
+
+## 示例
+
+```java
+/**
+ * 按活跃时间扫描超时流并执行清理。
+ */
+public void cleanupExpiredStreams(long currentTimeMs, long timeoutMs) {
+    // 使用 >=，保证达到阈值即进入清理。
+}
+```
