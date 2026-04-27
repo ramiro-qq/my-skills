@@ -1,0 +1,133 @@
+---
+alwaysApply: true
+---
+
+---
+description: 接口入参与出参约束（禁止 Map/JSON 泛型入参；出参统一 CommonResponse 且业务数据须具名 DTO；入参超 3 用 DTO/复用）
+globs: "**/adapter/controller/**/*.java,**/app/ports/**/*.java,**/app/dto/**/*.java,**/app/impl/**/*.java"
+alwaysApply: false
+---
+
+# 接口入参与出参约束
+
+---
+
+## 出参约束：统一 CommonResponse
+
+- **所有 HTTP 接口**（Controller 层对外暴露的 GET/POST/PUT/DELETE 等）**必须**使用封装好的 **CommonResponse** 作为返回类型，不得直接返回业务对象或 `void`（除特殊约定外）。
+- 成功时使用 `CommonResponse.success(数据)`，失败时使用 `CommonResponse.fail(...)` 或项目约定的错误构造方式。
+- **CommonResponse 的泛型参数**须为**具名、有字段契约**的业务类型（VO / DTO / `PageResultDTO<具体元素类型>` 等），与接口文档一致。
+
+### 出参业务数据：避免 Map / JSON / 无结构泛型
+
+- **业务成功体**（即 `CommonResponse<T>` 中的 **T**）**不得**为下列形式，以免对外契约模糊、难以演进与校验：
+  - `Map` / `Map<String, Object>` / `HashMap` 等键值容器
+  - 原始 **JSON 字符串**（如将序列化后的 `String` 当作 `data`）
+  - **`JsonNode` / `ObjectNode` / `com.google.gson.JsonElement`** 等通用 JSON 树类型
+  - 无字段契约的 **`Object`**
+  - **`CommonResponse<?>`**、**`CommonResponse<Map<...>>`**、**`CommonResponse<Object>`** 等以无结构类型承载业务数据
+- **列表/分页**：元素类型须为具名 DTO/VO，例如 `CommonResponse<List<ItemVO>>`、`CommonResponse<PageResultDTO<ItemDTO>>`，**不得**使用 `List<Map<String, Object>>` 等。
+- **例外**（若确有）：仅限框架层、内部工具或**非对外 HTTP 契约**的私有接口，且须在代码中注释说明；**新增对外 HTTP 接口不适用例外**。
+
+**示例（禁止）：**
+
+```java
+// 禁止：data 为 Map
+public CommonResponse<Map<String, Object>> getConfig() { ... }
+
+// 禁止：无结构泛型
+public CommonResponse<?> query() { ... }
+
+// 禁止：JSON 字符串或 JSON 树当业务体
+public CommonResponse<String> getJson() { ... }  // 若内容为业务 JSON
+public CommonResponse<JsonNode> getTree() { ... }
+```
+
+**示例（推荐）：**
+
+```java
+public CommonResponse<ConfigVO> getConfig() { ... }
+public CommonResponse<PageResultDTO<ItemListDTO>> page(Query query) { ... }
+```
+
+**GET 接口示例：**
+
+```java
+@GetMapping("/statusDetail")
+@ApiOperation(value = "df画布执行状态查询")
+public CommonResponse<DFSubTaskStatusDetailVO> queryDFExecutionStatus(@RequestParam String operationId) {
+    return CommonResponse.success(insightDataflowSubTaskService.getDataFlowTaskProgress(operationId));
+}
+```
+
+**POST 接口示例：**
+
+```java
+@PostMapping
+@ResponseStatus(HttpStatus.CREATED)
+public CommonResponse<ModelListDTO> create(@Valid @RequestBody CreateModelRequest request) {
+    return CommonResponse.success(modelAppPort.createModel(request));
+}
+```
+
+---
+
+## 入参约束
+
+### 零、禁止以 Map / JSON 泛型等作为入参
+
+- **adapter（Controller）与 app（ports / impl）对外或跨层方法入参**均**不得**使用以下形式承载业务字段：
+  - `Map` / `Map<String, Object>` / `HashMap` 等键值容器
+  - 原始 **JSON 字符串**（如 `String jsonBody`）作为业务体
+  - **`JsonNode` / `ObjectNode` / `com.google.gson.JsonElement`** 等通用 JSON 树类型
+  - 无字段契约的 **`Object`** 作为业务入参
+- **必须**使用具名 **DTO / Request / Query / Command**（`@Valid @RequestBody XxxRequest` 或明确类型的 `@RequestParam` 等），字段与接口文档一致，便于校验、演进与 IDE 提示。
+- **例外**（若确有）：仅限框架层、内部工具或**非对外 HTTP 契约**的私有方法，且须在代码中注释说明；**新增对外 HTTP 接口不适用例外**。
+
+**示例（禁止）：**
+
+```java
+// 禁止：无结构契约
+public CommonResponse<?> create(@RequestBody Map<String, Object> body) { ... }
+
+// 禁止：JSON 字符串当业务体
+public CommonResponse<?> create(@RequestBody String json) { ... }
+```
+
+**示例（推荐）：**
+
+```java
+public CommonResponse<ItemVO> create(@Valid @RequestBody CreateItemRequest request) { ... }
+```
+
+### 一、入参数量与 DTO
+
+- **入参超过 3 个（不含 3）时**：**必须**使用一个 **DTO 对象**作为入参，不得使用 4 个及以上零散参数。
+- **入参 ≤ 3 个**：可使用零散参数，也可视语义使用 DTO（例如需扩展或与文档一致时）。
+
+**示例（不推荐）：**
+
+```java
+// 入参 4 个，违反约束
+void list(String industry, String scenario, int page, int pageSize);
+```
+
+**示例（符合约束）：**
+
+```java
+// 使用 DTO 封装
+void list(ModelListQuery query);  // query 内含 industry, scenario, page, pageSize
+```
+
+### 二、DTO 复用优先
+
+- 新增接口入参时，**优先在现有 DTO 中查找可复用对象**（如 app/dto、common/dto）。
+- 仅当语义不同或字段差异较大时再新增 DTO；新增时命名需表意清晰（如 `XxxQuery`、`XxxRequest`、`XxxCommand`）。
+- 避免为同一语义重复定义多个入参 DTO。
+
+### 三、入参适用范围
+
+- **adapter 层**：Controller 方法入参、对 app 层 ports 的调用参数。
+- **app 层**：ports 接口方法入参、impl 实现方法入参。
+
+新增或修改接口时须遵守上述**入参与出参**约束：**禁止 Map/JSON/无结构 Object 等作为业务入参或 CommonResponse 的业务泛型**，保证契约清晰、可维护、可复用；HTTP 出参统一为 `CommonResponse<具名类型>`。
